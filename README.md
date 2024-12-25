@@ -1,4 +1,5 @@
-gogrepo gamma
+# Gogrepo - Gamevault
+gogrepo
 --------------
 Python-based tool for downloading your GOG.com game collections and extras to your local computer for full offline enjoyment.
 
