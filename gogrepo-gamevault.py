@@ -53,45 +53,34 @@ except ImportError:
     from queue import Queue
     from urllib.parse import urlparse, unquote, urlunparse,parse_qs
     from itertools import zip_longest
-    from io import StringIO
-    
+    from io import StringIO 
 if (platform.system() == "Windows"):
-    import ctypes.wintypes
-    
+    import ctypes.wintypes   
 if (platform.system() == "Darwin"):
     import CoreFoundation #import CFStringCreateWithCString, CFRelease, kCFStringEncodingASCII
     import objc #import pyobjc_id
-
 if not ((platform.system() == "Darwin") or (platform.system() == "Windows")):
     try:
         import PyQt5.QtDBus
     except ImportError:
         pass
-    
-
-
 # python 2 / 3 renames
 try: input = raw_input
 except NameError: pass
-
 # optional imports
 try:
     from html2text import html2text
 except ImportError:
     def html2text(x): return x
-
-    
 GENERIC_READ = 0x80000000
 GENERIC_WRITE = 0x40000000
 CREATE_NEW = 0x1    
 OPEN_EXISTING = 0x3
 FILE_BEGIN = 0x0
-
-
 # lib mods
 # configure logging
-LOG_MAX_MB = 180
-LOG_BACKUPS = 9 
+LOG_MAX_MB = os.getenv('LOG_MAX_MB', '180')
+LOG_BACKUPS = os.getenv('LOG_BACKUPS', '9') 
 logFormatter = logging.Formatter("%(asctime)s | %(message)s", datefmt='%H:%M:%S')
 rootLogger = logging.getLogger('ws')
 rootLogger.setLevel(logging.DEBUG)
@@ -109,24 +98,20 @@ error = rootLogger.error
 log_exception = rootLogger.exception
 
 # filepath constants
-GAME_STORAGE_DIR = r'.'
-TOKEN_FILENAME = r'gog-token.dat'
-MANIFEST_FILENAME = r'gog-manifest.dat'
-RESUME_MANIFEST_FILENAME = r'gog-resume-manifest.dat'
-CONFIG_FILENAME = r'gog-config.dat'
-SERIAL_FILENAME = r'gog-serial.txt'
-INFO_FILENAME = r'gog-info.txt'
-
-
+GAME_STORAGE_DIR = os.getenv('GAME_STORAGE_DIR', r'.') 
+TOKEN_FILENAME = os.getenv('TOKEN_FILENAME', r'gog-token.dat') 
+MANIFEST_FILENAME = os.getenv('MANIFEST_FILENAME', r'gog-manifest.dat') 
+RESUME_MANIFEST_FILENAME = os.getenv('RESUME_MANIFEST_FILENAME', r'gog-resume-manifest.dat') 
+CONFIG_FILENAME = os.getenv('CONFIG_FILENAME', r'gog-config.dat') 
+SERIAL_FILENAME = os.getenv('SERIAL_FILENAME', r'gog-serial.txt')
+INFO_FILENAME = os.getenv('INFO_FILENAME', r'gog-info.txt')
 #github API URLs
 REPO_HOME_URL = "https://api.github.com/repos/arankwende/gogrepo-gamevault" 
 NEW_RELEASE_URL = "/releases/latest"
-
 # GOG URLs
 GOG_HOME_URL = r'https://www.gog.com'
 GOG_ACCOUNT_URL = r'https://www.gog.com/account'
 GOG_LOGIN_URL = r'https://login.gog.com/login_check'
-
 #GOG Galaxy URLs
 GOG_AUTH_URL = r'https://auth.gog.com/auth'
 GOG_GALAXY_REDIRECT_URL = r'https://embed.gog.com/on_login_success'
@@ -134,11 +119,9 @@ GOG_CLIENT_ID = '46899977096215655'
 GOG_SECRET = '9d85c43b1482497dbbce61f6e4aa173a433796eeae2ca8c5f6129f2dc4de46d9'
 GOG_TOKEN_URL = r'https://auth.gog.com/token'
 GOG_EMBED_URL = r'https://embed.gog.com'
-
 # GOG Constants
 GOG_MEDIA_TYPE_GAME  = '1'
 GOG_MEDIA_TYPE_MOVIE = '2'
-
 # HTTP request settings
 HTTP_FETCH_DELAY = 1   # in seconds
 HTTP_RETRY_DELAY = 5   # in seconds #If you reduce this such that the wait between the first and third try is less than 10 seconds, you're gonna have a bad time with the 503 error. 
