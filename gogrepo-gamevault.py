@@ -170,9 +170,6 @@ if (sys.version_info[0] == 3 and sys.version_info[1] >= 8) or sys.version_info[0
 else:
     storeExtend = 'store'
 
-
-
-
 DEFAULT_FALLBACK_LANG = 'en'
 
 # Save manifest data for these os and lang combinations
@@ -202,10 +199,10 @@ for i in range(1,21):
 INSTALLERS_EXT = ['.exe','.bin','.dmg','.pkg','.sh']
 
 
-ORPHAN_DIR_NAME = 'gog-orphaned'
-DOWNLOADING_DIR_NAME = 'gog-downloading'
-PROVISIONAL_DIR_NAME = 'gog-provisional'
-IMAGES_DIR_NAME = 'images'
+ORPHAN_DIR_NAME = os.getenv('ORPHAN_DIR_NAME', 'gog-orphaned')
+DOWNLOADING_DIR_NAME = os.getenv('DOWNLOADING_DIR_NAME', 'gog-downloading')
+PROVISIONAL_DIR_NAME = os.getenv('PROVISIONAL_DIR_NAME', 'gog-provisional')
+IMAGES_DIR_NAME = os.getenv('IMAGES_DIR_NAME', 'images')
 
 ORPHAN_DIR_EXCLUDE_LIST = [ORPHAN_DIR_NAME,DOWNLOADING_DIR_NAME,IMAGES_DIR_NAME, '!misc']
 ORPHAN_FILE_EXCLUDE_LIST = [INFO_FILENAME, SERIAL_FILENAME]
