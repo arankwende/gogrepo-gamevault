@@ -4,10 +4,10 @@ from __future__ import print_function
 from __future__ import division
 from __future__ import unicode_literals
 
-__appname__ = 'gogrepoc.py'
-__author__ = 'eddie3,kalaynr'
-__version__ = '0.4.0-a'
-__url__ = 'https://github.com/kalanyr/gogrepoc'
+__appname__ = 'gogrepo-gamevault.py'
+__author__ = 'eddie3,kalaynr,arankwende'
+__version__ = '0.1'
+__url__ = 'https://github.com/arankwende/gogrepo-gamevault'
 
 # imports
 import unicodedata
@@ -114,12 +114,12 @@ TOKEN_FILENAME = r'gog-token.dat'
 MANIFEST_FILENAME = r'gog-manifest.dat'
 RESUME_MANIFEST_FILENAME = r'gog-resume-manifest.dat'
 CONFIG_FILENAME = r'gog-config.dat'
-SERIAL_FILENAME = r'!serial.txt'
-INFO_FILENAME = r'!info.txt'
+SERIAL_FILENAME = r'gog-serial.txt'
+INFO_FILENAME = r'gog-info.txt'
 
 
 #github API URLs
-REPO_HOME_URL = "https://api.github.com/repos/kalanyr/gogrepoc" 
+REPO_HOME_URL = "https://api.github.com/repos/arankwende/gogrepo-gamevault" 
 NEW_RELEASE_URL = "/releases/latest"
 
 # GOG URLs
@@ -144,11 +144,9 @@ HTTP_FETCH_DELAY = 1   # in seconds
 HTTP_RETRY_DELAY = 5   # in seconds #If you reduce this such that the wait between the first and third try is less than 10 seconds, you're gonna have a bad time with the 503 error. 
 HTTP_RETRY_COUNT = 4
 HTTP_TIMEOUT = 60
-
 HTTP_GAME_DOWNLOADER_THREADS = 4
 HTTP_PERM_ERRORCODES = (404, 403) #503 was in here GOG uses it as a request to wait for a bit when it's under stress. The time out appears to be ~10 seconds in such cases.  
 USER_AGENT = 'GOGRepoC/' + str(__version__)
-
 # Language table that maps two letter language to their unicode gogapi json name
 LANG_TABLE = {'en': u'English',   # English
               'bl': u'\u0431\u044a\u043b\u0433\u0430\u0440\u0441\u043a\u0438',  # Bulgarian
@@ -212,7 +210,6 @@ DEFAULT_LANG_LIST = [sysLang]
 
 #if DEFAULT_FALLBACK_LANG not in DEFAULT_LANG_LIST:
 #    DEFAULT_LANG_LIST.push(DEFAULT_FALLBACK_LANG)
-
 # These file types don't have md5 data from GOG
 SKIP_MD5_FILE_EXT = ['.txt', '.zip',''] #Removed tar.gz as it can have md5s and is actually parsed as .gz so wasn't working
 for i in range(1,21):
@@ -222,10 +219,10 @@ for i in range(1,21):
 INSTALLERS_EXT = ['.exe','.bin','.dmg','.pkg','.sh']
 
 
-ORPHAN_DIR_NAME = '!orphaned'
-DOWNLOADING_DIR_NAME = '!downloading'
-PROVISIONAL_DIR_NAME = '!provisional'
-IMAGES_DIR_NAME = '!images'
+ORPHAN_DIR_NAME = 'gog-orphaned'
+DOWNLOADING_DIR_NAME = 'gog-downloading'
+PROVISIONAL_DIR_NAME = 'gog-provisional'
+IMAGES_DIR_NAME = 'images'
 
 ORPHAN_DIR_EXCLUDE_LIST = [ORPHAN_DIR_NAME,DOWNLOADING_DIR_NAME,IMAGES_DIR_NAME, '!misc']
 ORPHAN_FILE_EXCLUDE_LIST = [INFO_FILENAME, SERIAL_FILENAME]
@@ -235,7 +232,6 @@ MANIFEST_SYNTAX_VERSION = 1
 RESUME_MANIFEST_SYNTAX_VERSION = 1 
 
 token_lock = threading.RLock()
-
 #request wrapper 
 def request(session,url,args=None,byte_range=None,retries=HTTP_RETRY_COUNT,delay=None,stream=False,data=None):
     """Performs web request to url with optional retries, delay, and byte range.
@@ -272,7 +268,6 @@ def request(session,url,args=None,byte_range=None,retries=HTTP_RETRY_COUNT,delay
             warn('request failed: %s (%d retries left) -- will retry in %ds...' % (e, retries, HTTP_RETRY_DELAY))
             return request(session=session,url=url, args=args, byte_range=byte_range, retries=retries-1, delay=HTTP_RETRY_DELAY,stream=stream,data=data)
     return response
-
 #Request Head weapper
 def request_head(session,url,args=None,retries=HTTP_RETRY_COUNT,delay=None):
     """Performs web head request to url with optional retries, delay,
@@ -300,9 +295,6 @@ def request_head(session,url,args=None,retries=HTTP_RETRY_COUNT,delay=None):
             warn('request failed: %s (%d retries left) -- will retry in %ds...' % (e, retries, HTTP_RETRY_DELAY))
             return request_head(session=session,url=url, args=args, retries=retries-1, delay=HTTP_RETRY_DELAY)
     return response
-
-    
-
 def renew_token(session,retries=HTTP_RETRY_COUNT,delay=None):
     with token_lock:
         _retry = False
@@ -336,9 +328,6 @@ def renew_token(session,retries=HTTP_RETRY_COUNT,delay=None):
         except AttributeError:
             #Not a Token based session
             pass
-
-
-
 # --------------------------
 # Helper types and functions
 # --------------------------
@@ -354,9 +343,8 @@ class AttrDict(dict):
             
     def __setattr__(self, key, val):
         self[key] = val
-
 class ConditionalWriter(object):
-    """File writer that only updates file on disk if contents chanaged"""
+    """File writer that only updates file on disk if contents changed"""
 
     def __init__(self, filename):
         self._buffer = None
@@ -384,7 +372,6 @@ class ConditionalWriter(object):
                 with codecs.open(self._filename, 'w', 'utf-8') as overwrite:
                     tmp.seek(0)
                     shutil.copyfileobj(tmp, overwrite)
-
 def slugify(value, allow_unicode=False):
     '''
     The below block comment applies to this function in it's entirety (including the header except for the BSD License text itself and this comment )
@@ -435,13 +422,10 @@ def slugify(value, allow_unicode=False):
         )
     value = re.sub(r"[^\w\s-]", "", value.lower())
     return re.sub(r"[-\s]+", "-", value).strip("-_")
-
-
 def path_preserving_split_ext(path):
     path_without_extensions = os.path.join(os.path.dirname(path),os.path.basename(path).rsplit(os.extsep,1)[0]) #Need to improve this to handle eg tar.gz
     extension = os.extsep + os.path.basename(path).rsplit(os.extsep,1)[1]
     return [path_without_extensions,extension]
-
 def move_with_increment_on_clash(src,dst,count=0):
     if (count == 0):
         potDst = dst
@@ -467,7 +451,6 @@ def move_with_increment_on_clash(src,dst,count=0):
         shutil.move(src,potDst)
     else:
         move_with_increment_on_clash(src,dst,count+1)
-    
 def load_manifest(filepath=MANIFEST_FILENAME):
     info('loading local manifest...')
     try:
@@ -508,7 +491,6 @@ def load_manifest(filepath=MANIFEST_FILENAME):
         return eval(ad)
     except IOError:
         return []
-
 def save_manifest(items,filepath=MANIFEST_FILENAME,update_md5_xml=False,delete_md5_xml=False):
     if update_md5_xml:
         #existing_md5s = []
@@ -620,7 +602,6 @@ def save_manifest(items,filepath=MANIFEST_FILENAME,update_md5_xml=False,delete_m
             #all_md5s = glob.glob()   Can't recursive glob before 3.5 so have to do this the hardway     
                     
     save_manifest_core(items,filepath)
-
 def save_manifest_core(items,filepath=MANIFEST_FILENAME):
     info('saving manifest...')
     try:
@@ -634,7 +615,6 @@ def save_manifest_core(items,filepath=MANIFEST_FILENAME):
             pprint.pprint(items, width=123, stream=w)
         info('saved manifest')            
         raise
-        
 def save_resume_manifest(items):
     info('saving resume manifest...')
     try:
@@ -648,7 +628,6 @@ def save_resume_manifest(items):
             pprint.pprint(items, width=123, stream=w)
         info('saved resume manifest')            
         raise
-
 def load_resume_manifest(filepath=RESUME_MANIFEST_FILENAME):
     info('loading local resume manifest...')
     try:
@@ -658,8 +637,7 @@ def load_resume_manifest(filepath=RESUME_MANIFEST_FILENAME):
                 ad = re.sub(r"'size': ([0-9]+)L,",r"'size': \1,",ad)
         return eval(ad)
     except IOError:
-        return []
-        
+        return []   
 def save_config_file(items):
     info('saving config...')
     try:
@@ -673,7 +651,6 @@ def save_config_file(items):
             pprint.pprint(items, width=123, stream=w)
         info('saved resume manifest')            
         raise
-
 def load_config_file(filepath=CONFIG_FILENAME):
     info('loading config...')
     try:
@@ -690,15 +667,12 @@ def open_notrunc(name, bufsize=4*1024):
         flags |= os.O_BINARY  # windows
     fd = os.open(name, flags, 0o666)
     return os.fdopen(fd, 'wb', bufsize)
-    
 def open_notruncwrrd(name, bufsize=4*1024):
     flags = os.O_RDWR | os.O_CREAT
     if hasattr(os, "O_BINARY"):
         flags |= os.O_BINARY  # windows
     fd = os.open(name, flags, 0o666)
     return os.fdopen(fd, 'r+b', bufsize)
-    
-    
 def hashstream(stream,start,end):
     stream.seek(start)
     readlength = (end - start)+1
@@ -710,7 +684,6 @@ def hashstream(stream,start,end):
         log_exception('')
         raise
     return hasher.hexdigest()
-
 def hashfile(afile, blocksize=65536):
     afile = open(afile, 'rb')
     hasher = hashlib.md5()
@@ -719,8 +692,6 @@ def hashfile(afile, blocksize=65536):
         hasher.update(buf)
         buf = afile.read(blocksize)
     return hasher.hexdigest()
-
-
 def test_zipfile(filename):
     """Opens filename and tests the file for ZIP integrity.  Returns True if
     zipfile passes the integrity test, False otherwise.
@@ -732,8 +703,6 @@ def test_zipfile(filename):
     except (zipfile.BadZipfile,zlib.error):
         return False
     return False
-
-
 def pretty_size(n):
     for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
         if n < 1024 or unit == 'TB':
@@ -744,22 +713,17 @@ def pretty_size(n):
         return "{0}{1}".format(n, unit)
     else:
         return "{0:.2f}{1}".format(n, unit)
-
-
 def get_total_size(dir):
     total = 0
     for (root, dirnames, filenames) in os.walk(dir):
         for f in filenames:
             total += os.path.getsize(os.path.join(root, f))
     return total
-
-
 def item_checkdb(search_id, gamesdb):
     for i in range(len(gamesdb)):
         if search_id == gamesdb[i].id:
             return i
     return None
-
 def handle_game_renames(savedir,gamesdb,dryrun):   
     info("scanning manifest for renames...")
     orphan_root_dir = os.path.join(savedir, ORPHAN_DIR_NAME)
@@ -830,9 +794,6 @@ def handle_game_renames(savedir,gamesdb,dryrun):
                         error('    -> rename failed "{}" -> "{}"'.format(src_file, dst_file))
                         if not dryrun:
                             item.prev_verified = False
-                    
-            
-
 def handle_game_updates(olditem, newitem,strict, update_downloads_strict, update_extras_strict):
     try:
         _ = olditem.galaxyDownloads
@@ -969,8 +930,6 @@ def handle_game_updates(olditem, newitem,strict, update_downloads_strict, update
         else:
             #New file entry, presume changed 
             newExtra.force_change = True
-
-
 def fetch_chunk_tree(response, session):
     file_ext = os.path.splitext(urlparse(response.url).path)[1].lower()
     if file_ext not in SKIP_MD5_FILE_EXT:
@@ -1011,7 +970,6 @@ def fetch_chunk_tree(response, session):
             debug("End exception report.")
             return None 
     return None
-
 def fetch_file_info(d, fetch_md5,save_md5_xml,updateSession):
    # fetch file name/size
     #try:
@@ -1189,8 +1147,6 @@ def filter_downloads(out_list, downloads_list, lang_list, os_list,save_md5_xml,u
                                 error("Could not fetch file info so using canonical link: %s" % href_ds[0][0].href)
                                 filtered_downloads.append(href_ds[0][0])
     out_list.extend(filtered_downloads)
-
-
 def filter_extras(out_list, extras_list,save_md5_xml,updateSession):
     """filters and translates extras information and adds them into out_list
     """
@@ -1261,8 +1217,6 @@ def filter_extras(out_list, extras_list,save_md5_xml,updateSession):
             error("Could not fetch file info so using canonical link: %s" % href_ds[0][0].href)
             filtered_extras.append(href_ds[0][0])
     out_list.extend(filtered_extras)
-
-
 def filter_dlcs(item, dlc_list, lang_list, os_list,save_md5_xml,updateSession):
     """filters any downloads/extras information against matching lang and os, translates
     them, and adds them to the item downloads/extras
@@ -1284,8 +1238,7 @@ def filter_dlcs(item, dlc_list, lang_list, os_list,save_md5_xml,updateSession):
         filter_downloads(item.downloads, dlc_dict['downloads'], lang_list, os_list,save_md5_xml,updateSession)
         filter_downloads(item.galaxyDownloads, dlc_dict['galaxyDownloads'], lang_list, os_list,save_md5_xml,updateSession)
         filter_extras(item.extras, dlc_dict['extras'],save_md5_xml,updateSession)
-        filter_dlcs(item, dlc_dict['dlcs'], lang_list, os_list,save_md5_xml,updateSession)  # recursive
-        
+        filter_dlcs(item, dlc_dict['dlcs'], lang_list, os_list,save_md5_xml,updateSession)  # recursive  
 def deDuplicateList(duplicatedList,existingItems,strictDupe):   
     deDuplicatedList = []
     for update_item in duplicatedList:
@@ -1302,9 +1255,7 @@ def deDuplicateList(duplicatedList,existingItems,strictDupe):
         else: 
             #Placeholder for an item coming soon, pass through
             deDuplicatedList.append(update_item)
-    return deDuplicatedList        
-        
-        
+    return deDuplicatedList         
 def deDuplicateName(potentialItem,clashDict,strictDupe):
     try: 
         #Check if Name Exists
@@ -1334,7 +1285,6 @@ def deDuplicateName(potentialItem,clashDict,strictDupe):
         #No Name Clash
         clashDict[potentialItem.name] = {potentialItem.size:[potentialItem.md5]}
         return potentialItem.name
-
 def makeDeDuplicateName(name,prevItemsCount):
     root,ext = name.rsplit(os.extsep,1) #expand this to cover eg tar.zip
     ext = os.extsep + ext
@@ -1354,15 +1304,12 @@ def makeDeDuplicateName(name,prevItemsCount):
         else:    
             name = root[:setDelimiter] + "("+str(prevItemsCount) + ")" + root[setDelimiter:] + ext
     return name
-
-
 def check_skip_file(fname, skipfiles):
     # return pattern that matched, or None
     for skipf in skipfiles:
         if fnmatch(fname, skipf):
             return skipf
     return None
-
 def process_path(path):
     fpath = path
     if sys.version_info[0] <= 2:
@@ -1371,18 +1318,15 @@ def process_path(path):
     fpath = os.path.abspath(fpath)
     raw_fpath = u'\\\\?\\%s' % fpath 
     return raw_fpath   
-
 def is_numeric_id(s):
     try:
         int(s)
         return True
     except ValueError:
         return False    
-
 def append_xml_extension_to_url_path(url):
     parsed = urlparse(url)
     return urlunparse(parsed._replace(path = parsed.path + ".xml")).replace('%28','(').replace('%29',')') #Thanks to pasbeg
-
 def process_argv(argv):
     p1 = argparse.ArgumentParser(description='%s (%s)' % (__appname__, __url__), add_help=False)
     sp1 = p1.add_subparsers(help='command', dest='command', title='commands')
@@ -1580,7 +1524,6 @@ def process_argv(argv):
                 raise SystemExit(1)
                 
     return args
-
 # --------
 # Commands
 # --------
@@ -1691,12 +1634,10 @@ def cmd_login(user, passwd):
         save_token(token_json)           
     else:
         error('Galaxy login failed, verify your username/password and try again.')
-
 def makeGitHubSession(authenticatedSession=False):
     gitSession = requests.Session()
     gitSession.headers={'User-Agent':USER_AGENT,'Accept':'application/vnd.github.v3+json'}
-    return gitSession    
-        
+    return gitSession            
 def makeGOGSession(loginSession=False):
     gogSession = requests.Session()
     if not loginSession:
@@ -1707,7 +1648,6 @@ def makeGOGSession(loginSession=False):
             error('failed to find valid token (Please login and retry)')
             sys.exit(1)
     return gogSession
-
 def save_token(token):
     info('saving token...')
     try:
@@ -1719,7 +1659,6 @@ def save_token(token):
             pprint.pprint(token, width=123, stream=w)
         info('saved token')            
         raise
-
 def load_token(filepath=TOKEN_FILENAME):
     info('loading token...')
     try:
@@ -1727,13 +1666,9 @@ def load_token(filepath=TOKEN_FILENAME):
             ad = r.read().replace('{', 'AttrDict(**{').replace('}', '})')
         return eval(ad)
     except IOError:
-        return {}
-        
+        return {}     
 def input_timeout(*ignore):
     raise TimeoutError
-
-        
-
 def cmd_update(os_list, lang_list, skipknown, updateonly, partial, ids, skipids,skipHidden,installers,resumemode,strict,strictDupe,strictDownloadsUpdate,strictExtrasUpdate,md5xmls,noChangeLogs):
     media_type = GOG_MEDIA_TYPE_GAME
     items = []
@@ -2114,8 +2049,6 @@ def cmd_update(os_list, lang_list, skipknown, updateonly, partial, ids, skipids,
         if (resumemode != 'onlyresume'):
             info('returning to specified download request...')
             cmd_update(save_os_list, save_lang_list, save_skipknown, save_updateonly, save_partial, ids, skipids,skipHidden,save_installers,resumemode,save_strict,save_strictDupe,save_strictDownloadsUpdate,save_strictExtrasUpdate,save_md5xmls,save_noChangeLogs)
-
-
 def cmd_import(src_dir, dest_dir,os_list,lang_list,skipextras,skipids,ids,skipgalaxy,skipstandalone,skipshared,destructive):
     """Recursively finds all files within root_dir and compares their MD5 values
     against known md5 values from the manifest.  If a match is found, the file will be copied
@@ -2274,7 +2207,6 @@ def cmd_import(src_dir, dest_dir,os_list,lang_list,skipextras,skipids,ids,skipga
                         changed = True
                     if changed:
                         save_manifest(gamesdb)
-
 def cmd_download(savedir, skipextras,skipids, dryrun, ids,os_list, lang_list,skipgalaxy,skipstandalone,skipshared, skipfiles,covers,backgrounds,downloadLimit = None):
     sizes, rates, errors = {}, {}, {}
     work = Queue()  # build a list of work items
@@ -2344,7 +2276,6 @@ def cmd_download(savedir, skipextras,skipids, dryrun, ids,os_list, lang_list,ski
 
     downloadingdir = os.path.join(savedir, DOWNLOADING_DIR_NAME)    
     provisionaldir = os.path.join(downloadingdir,PROVISIONAL_DIR_NAME )
-    
     if os.path.isdir(downloadingdir):
         info ("Cleaning up " + downloadingdir)
         for cur_dir in sorted(os.listdir(downloadingdir)):
@@ -2371,7 +2302,6 @@ def cmd_download(savedir, skipextras,skipids, dryrun, ids,os_list, lang_list,ski
                                     info("Removing outdated file " + os.path.join(downloadingdir, cur_dir, cur_dir_file))    
                                     if not dryrun:
                                         os.remove(os.path.join(downloadingdir, cur_dir, cur_dir_file))
-
     if os.path.isdir(provisionaldir):
         info ("Cleaning up " +  provisionaldir)
         for cur_dir in sorted(os.listdir(provisionaldir)):
@@ -2397,10 +2327,6 @@ def cmd_download(savedir, skipextras,skipids, dryrun, ids,os_list, lang_list,ski
                                 info("Removing outdated file " + os.path.join(provisionaldir, cur_dir, cur_dir_file))    
                                 if not dryrun:
                                     os.remove(os.path.join(provisionaldir, cur_dir, cur_dir_file))
-
-                                        
-                                        
-        
     for item in items:
         try:
             _ = item.folder_name 
@@ -3141,8 +3067,7 @@ def cmd_download(savedir, skipextras,skipids, dryrun, ids,os_list, lang_list,ski
                 try:
                     os.rmdir(testdir)
                 except Exception:
-                    pass
-                    
+                    pass            
 def cmd_backup(src_dir, dest_dir,skipextras,os_list,lang_list,ids,skipids,skipgalaxy,skipstandalone,skipshared):
     gamesdb = load_manifest()
     
@@ -3236,8 +3161,6 @@ def cmd_backup(src_dir, dest_dir,skipextras,os_list,lang_list,ids,skipids,skipga
             for extra_file in [INFO_FILENAME, SERIAL_FILENAME]:
                 if os.path.exists(os.path.join(src_game_dir, extra_file)):
                     shutil.copy(os.path.join(src_game_dir, extra_file), dest_game_dir)
-
-
 def cmd_verify(gamedir, skipextras, skipids,  check_md5, check_filesize, check_zips, delete_on_fail, clean_on_fail, ids, os_list, lang_list, skipgalaxy,skipstandalone,skipshared, skipfiles, force_verify, permissive_change_clear):
     """Verifies all game files match manifest with any available md5 & file size info
     """
@@ -3474,7 +3397,6 @@ def cmd_verify(gamedir, skipextras, skipids,  check_md5, check_filesize, check_z
         info('deleted items....... %d' % del_file_cnt)
     if clean_on_fail:
         info('cleaned items....... %d' % clean_file_cnt)
-        
 def cmd_trash(cleandir,installersonly,dryrun):
     downloading_root_dir = os.path.join(cleandir, ORPHAN_DIR_NAME)
     for dir in os.listdir(downloading_root_dir):
@@ -3500,8 +3422,7 @@ def cmd_trash(cleandir,installersonly,dryrun):
                         os.rmdir(testdir)
                         info("Removed empty directory " + testdir)
                 except OSError:
-                    pass
-                
+                    pass 
 def cmd_clear_partial_downloads(cleandir,dryrun):
     downloading_root_dir = os.path.join(cleandir, DOWNLOADING_DIR_NAME)
     for dir in os.listdir(downloading_root_dir):
@@ -3525,8 +3446,6 @@ def cmd_clear_partial_downloads(cleandir,dryrun):
                 info("Deleting " + testdir)
             except Exception:
                 error("Failed to delete directory: " + testdir)
-
-
 def cmd_clean(cleandir, dryrun):
     items = load_manifest()
     items_by_title = {}
@@ -3632,8 +3551,7 @@ def cmd_clean(cleandir, dryrun):
             info('orphaned items moved to: {}'.format(orphan_root_dir))
             save_manifest(items)
     else:
-        info('nothing to clean. nice and tidy!')
-        
+        info('nothing to clean. nice and tidy!')       
 def update_self():
     #To-Do: add auto-update to main using Last-Modified (repo for rolling, latest release for standard)
     #Add a dev mode which skips auto-updates and a manual update command which can specify rolling/standard
@@ -3677,8 +3595,7 @@ def update_self():
     with codecs.open('tarballrollingupdatetest.test', 'w', 'utf-8') as w:
         print(response.headers,file=w)
     with open_notrunc('rolling.tar.gz') as w:    
-        w.write(rawResponse)
-        
+        w.write(rawResponse)      
 def purge_md5_chunkdata():
     all_games = load_manifest()
     for game in all_games:
@@ -3688,7 +3605,6 @@ def purge_md5_chunkdata():
             except KeyError:
                 pass
     save_manifest(all_games)
-
 def main(args):
     stime = datetime.datetime.now()
 
@@ -3800,11 +3716,9 @@ def main(args):
         cmd_clean(args.cleandir, args.dryrun)
     elif args.command == "trash":
         cmd_trash(args.gamedir,args.installersonly,args.dryrun)
-
     etime = datetime.datetime.now()
     info('--')
     info('total time: %s' % (etime - stime))
-
 class Wakelock: 
     #Mac Sleep support based on caffeine : https://github.com/jpn--/caffeine by Jeffrey Newman
 
@@ -3896,8 +3810,7 @@ class Wakelock:
         if platform.system() == "Darwin":
             self._PMerrcode = self._IOPMAssertionRelease(self._PMassertID)
             self._PMassertID.value = 0
-            self._PMassertion = None
-            
+            self._PMassertion = None  
 class DBusSystemInhibitor:
     
     def __init__(self,name,path,interface,method=["Inhibit"]):
@@ -3929,11 +3842,7 @@ class DBusSystemInhibitor:
         
     def uninhibit(self):
         if (self.cookie is not None):
-            pass #It's not possible to release this file handle in QtDBus (since the QDUnixFileDescriptor is a copy). The file handle is automatically released when the program exits. 
-                
-
-
-            
+            pass #It's not possible to release this file handle in QtDBus (since the QDUnixFileDescriptor is a copy). The file handle is automatically released when the program exits.             
 class DBusSessionInhibitor:
     def __init__(self,name, path, interface, methods=["Inhibit", "UnInhibit"] ):
         self.name = name
@@ -3956,7 +3865,6 @@ class DBusSessionInhibitor:
         if self.cookie is not None:
             self.iface.call(self.methods[1],self.cookie)
             self.cookie = None
-
 class GnomeSessionInhibitor(DBusSessionInhibitor):
     TOPLEVEL_XID = 0
     INHIBIT_SUSPEND = 4
@@ -3970,9 +3878,6 @@ class GnomeSessionInhibitor(DBusSessionInhibitor):
     def inhibit(self):
         if self.cookie is None:
             self.cookie = PyQt5.QtDbus.QDBusReply(self.iface.call(self.methods[0],self.APPNAME,GnomeSessionInhibitor.TOPLEVEL_XID, self.REASON),GnomeSessionInhibitor.INHIBIT_SUSPEND).value()
-            
-            
- 
 if __name__ == "__main__":
     try:
         wakelock = Wakelock()
