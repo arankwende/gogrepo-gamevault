@@ -3050,8 +3050,7 @@ def cmd_download(savedir, skipextras,skipids, dryrun, ids,os_list, lang_list,ski
                     pass            
 def cmd_backup(src_dir, dest_dir,skipextras,os_list,lang_list,ids,skipids,skipgalaxy,skipstandalone,skipshared):
     gamesdb = load_manifest()
-    
-    for game in games_db:
+    for game in gamesdb:
         try:
             _ = game.folder_name
         except AttributeError:
